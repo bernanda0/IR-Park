@@ -9,11 +9,12 @@ import (
 )
 
 type Account struct {
-	AccountID    sql.NullString `json:"account_id"`
-	Email        string         `json:"email"`
-	PasswordHash string         `json:"password_hash"`
-	CreatedAt    sql.NullTime   `json:"created_at"`
-	IsSubscribe  sql.NullBool   `json:"is_subscribe"`
+	AccountID    string       `json:"account_id"`
+	Username     string       `json:"username"`
+	Email        string       `json:"email"`
+	PasswordHash string       `json:"password_hash"`
+	CreatedAt    sql.NullTime `json:"created_at"`
+	IsSubscribe  sql.NullBool `json:"is_subscribe"`
 }
 
 type VehicleDatum struct {

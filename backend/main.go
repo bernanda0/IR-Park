@@ -72,12 +72,17 @@ func stopServer(s *http.Server, l *log.Logger, ctx *context.Context, cancel *con
 }
 
 func defineMultiplexer(l *log.Logger, q *sqlc.Queries) http.Handler {
+	var u handlers.AuthedUser
+
 	// reference to the handler
 	hello_handler := handlers.NewHello(l)
+	account_handler := handlers.NewAccountHandler(l, q, &u)
 
 	// handle multiplexer
 	mux := http.NewServeMux()
 	mux.Handle("/", hello_handler)
+	mux.HandleFunc("/account/signup", account_handler.CreateAccountH)
+	mux.HandleFunc("/account/list", account_handler.ListAccountsH)
 
 	corsMiddleware := cors.Default().Handler
 

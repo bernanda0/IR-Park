@@ -36,3 +36,11 @@ pg-psql-test:
 # db migration
 migrate-init:
 	migrate create -ext sql -dir db/migration -seq db_scheme
+migrate-up:
+	migrate -path db/migration -database "postgresql://$(USERNAME):$(PASSWORD)@localhost:5432/$(DB_NAME)?sslmode=disable" -verbose up
+migrate-up-test:
+	migrate -path db/migration -database "postgresql://$(USERNAME):$(PASSWORD)@localhost:5432/$(DB_NAME_TEST)?sslmode=disable" -verbose up
+migrate-down:
+	migrate -path db/migration -database "postgresql://$(USERNAME):$(PASSWORD)@localhost:5432/$(DB_NAME)?sslmode=disable" -verbose down
+migrate-fix:
+	migrate -path db/migration -database "postgresql://$(USERNAME):$(PASSWORD)@localhost:5432/$(DB_NAME)?sslmode=disable" force VERSION
