@@ -6,6 +6,11 @@ DB_NAME_TEST = $(PREFIX)-db-test
 IMAGE_NAME = my-postgres:latest
 CONTAINER_NAME = $(PREFIX)-container
 
+#
+run:
+	make pg-start && \
+	go run main.go
+
 # FIRST START
 pg-run:
 	docker run -d --name $(CONTAINER_NAME) -p 5432:5432 $(IMAGE_NAME)

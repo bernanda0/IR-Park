@@ -15,7 +15,7 @@ const LoginForm: React.FC = () => {
   useEffect(() => {
     // Fetch data from localhost:4444
     axios
-      .get("http://127.0.0.1:4444/account/list")
+      .get("http://127.0.0.1:4444/account/signup")
       .then((response) => {
         setAccounts(response.data); // Set the data in state
         accounts.forEach((a) => {

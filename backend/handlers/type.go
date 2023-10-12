@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"redgate.com/b/db/sqlc"
+	"redgate.com/b/token"
 )
 
 type Handler struct {
@@ -20,6 +21,11 @@ type AccountHandler struct {
 	h *Handler
 }
 
+type AuthHandler struct {
+	h *Handler
+	t token.Maker
+}
+
 type HandlerParam struct {
 	w           http.ResponseWriter
 	r           *http.Request
@@ -28,7 +34,7 @@ type HandlerParam struct {
 }
 
 type AuthedUser struct {
-	UserID   uint   `json:"user_id"`
+	UserID   string `json:"user_id"`
 	Username string `json:"username"`
 }
 
@@ -38,7 +44,7 @@ type LoginUserResponse struct {
 	AccessTokenEx  time.Time `json:"access_token_expire"`
 	RefreshToken   string    `json:"refresh_token"`
 	RefreshTokenEx time.Time `json:"refresh_token_expire"`
-	UserID         uint      `json:"user_id"`
+	UserID         string    `json:"user_id"`
 	Username       string    `json:"username"`
 }
 
