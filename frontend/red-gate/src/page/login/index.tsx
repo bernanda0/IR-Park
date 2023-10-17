@@ -12,15 +12,20 @@ const LoginForm: React.FC = () => {
   const [success, setSuccess] = useState(false);
   const [accounts, setAccounts] = useState<Account[]>([]);
 
+  const instance = axios.create({
+    baseURL: "http://127.0.0.1:4444/", // Replace with your API base UR
+  });
+
   useEffect(() => {
     // Fetch data from localhost:4444
-    axios
-      .get("http://127.0.0.1:4444/account/signup")
+    instance
+      .get("/account/list")
       .then((response) => {
-        setAccounts(response.data); // Set the data in state
-        accounts.forEach((a) => {
-          console.log(a.username);
-        });
+        if (response.status == 200) {
+          setAccounts(response.data); // Set the data in state
+          console.log(accounts);
+        }
+        console.log(response.data);
       })
       .catch((error) => console.error("Error fetching data:", error));
   }, [success]);
@@ -37,29 +42,49 @@ const LoginForm: React.FC = () => {
     setUsername(e.target.value);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    const signUpForm: SignUpForm = {
+      username,
+      email,
+      password,
+    };
+
+    const formData = new URLSearchParams();
+    formData.append("username", signUpForm.username);
+    formData.append("email", signUpForm.email);
+    formData.append("password", signUpForm.password);
 
     try {
-      const response = await fetch("http://127.0.0.1:4444/account/signup", {
-        method: "POST",
+      const resp = await instance.post("http://127.0.0.1:4444/auth/signup", formData, {
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: JSON.stringify({
-          email,
-          password,
-          username,
-        }),
       });
+      console.log("Form submitted with response body ", resp.data);
+    } catch (error) {
+      console.error("Form submission error:", error);
+    }
+  };
 
-      if (response.ok) {
-        const data = await response.json();
-        setSuccess(true);
-        console.log("Form submitted:", data);
-      } else {
-        console.error("Form submission failed");
-      }
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const loginForm: LoginForm = {
+      email,
+      password,
+    };
+
+    const formData = new URLSearchParams();
+    formData.append("email", loginForm.email);
+    formData.append("password", loginForm.password);
+
+    try {
+      const resp = await instance.post("http://127.0.0.1:4444/auth/login", formData, {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      });
+      console.log("Form submitted with response body ", resp.data);
     } catch (error) {
       console.error("Form submission error:", error);
     }
@@ -68,7 +93,7 @@ const LoginForm: React.FC = () => {
   return (
     <div className="max-w-md mx-auto my-10 p-6 bg-white rounded-md shadow-lg">
       <h2 className="text-[100px] font-bold mb-6 text-green-700">RED-GATE</h2>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={isSignUp? handleSignUp : handleLogin}>
         <div className="mb-4">
           <label
             htmlFor="email"
@@ -142,7 +167,6 @@ const LoginForm: React.FC = () => {
       </form>
       <div>
         <h2>Fetched Data:</h2>
-        
       </div>
     </div>
   );
