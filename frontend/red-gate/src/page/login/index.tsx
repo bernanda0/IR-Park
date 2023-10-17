@@ -2,12 +2,19 @@ import React, { useEffect, useState } from "react";
 import "../../App.css";
 import "../../index.css";
 import axios from "axios";
+import { useCookies } from "react-cookie";
+import checkAndRenewToken from "./renewToken";
 
 const LoginForm: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [username, setUsername] = useState("");
+  const [cookies, setCookie] = useCookies([
+    "accessToken",
+    "refreshToken",
+    "accessTokenEx",
+  ]);
 
   const [success, setSuccess] = useState(false);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -17,17 +24,26 @@ const LoginForm: React.FC = () => {
   });
 
   useEffect(() => {
-    // Fetch data from localhost:4444
-    instance
-      .get("/account/list")
-      .then((response) => {
-        if (response.status == 200) {
-          setAccounts(response.data); // Set the data in state
-          console.log(accounts);
-        }
-        console.log(response.data);
-      })
-      .catch((error) => console.error("Error fetching data:", error));
+    const renewTokenParam: RenewToken = {
+      accessTokenExpire: new Date(cookies.accessTokenEx),
+      refreshToken: cookies.refreshToken,
+    };
+    // Call the checkAndRenewToken function before making any API call
+    checkAndRenewToken(renewTokenParam, setCookie).then(() => {
+      instance
+        .get("/account/list", {
+          headers: {
+            Authorization: `Bearer ${cookies.accessToken}`,
+          },
+        })
+        .then((response) => {
+          if (response.status == 200) {
+            setAccounts(response.data); // Set the data in state
+          }
+          console.log(response.data);
+        })
+        .catch((error) => console.error("Error fetching data:", error));
+    });
   }, [success]);
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,24 +60,18 @@ const LoginForm: React.FC = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    const signUpForm: SignUpForm = {
-      username,
-      email,
-      password,
-    };
 
     const formData = new URLSearchParams();
-    formData.append("username", signUpForm.username);
-    formData.append("email", signUpForm.email);
-    formData.append("password", signUpForm.password);
+    formData.append("username", username);
+    formData.append("email", email);
+    formData.append("password", password);
 
     try {
-      const resp = await instance.post("http://127.0.0.1:4444/auth/signup", formData, {
+      await instance.post("http://127.0.0.1:4444/auth/signup", formData, {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
       });
-      console.log("Form submitted with response body ", resp.data);
     } catch (error) {
       console.error("Form submission error:", error);
     }
@@ -69,22 +79,28 @@ const LoginForm: React.FC = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const loginForm: LoginForm = {
-      email,
-      password,
-    };
 
     const formData = new URLSearchParams();
-    formData.append("email", loginForm.email);
-    formData.append("password", loginForm.password);
+    formData.append("email", email);
+    formData.append("password", password);
 
     try {
-      const resp = await instance.post("http://127.0.0.1:4444/auth/login", formData, {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-      });
-      console.log("Form submitted with response body ", resp.data);
+      const resp = await instance.post(
+        "http://127.0.0.1:4444/auth/login",
+        formData,
+        {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+        }
+      );
+
+      const { access_token, access_token_expire, refresh_token } =
+        resp.data as LoginResponseJson;
+      setCookie("accessToken", access_token);
+      setCookie("accessTokenEx", access_token_expire);
+      setCookie("refreshToken", refresh_token);
+      setSuccess(true);
     } catch (error) {
       console.error("Form submission error:", error);
     }
@@ -93,7 +109,7 @@ const LoginForm: React.FC = () => {
   return (
     <div className="max-w-md mx-auto my-10 p-6 bg-white rounded-md shadow-lg">
       <h2 className="text-[100px] font-bold mb-6 text-green-700">RED-GATE</h2>
-      <form onSubmit={isSignUp? handleSignUp : handleLogin}>
+      <form onSubmit={isSignUp ? handleSignUp : handleLogin}>
         <div className="mb-4">
           <label
             htmlFor="email"
@@ -167,6 +183,11 @@ const LoginForm: React.FC = () => {
       </form>
       <div>
         <h2>Fetched Data:</h2>
+        <ul>
+          {accounts.map((account, index) => (
+            <li key={index}>{account.account_id}</li>
+          ))}
+        </ul>
       </div>
     </div>
   );
