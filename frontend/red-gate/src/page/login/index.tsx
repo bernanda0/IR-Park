@@ -1,51 +1,35 @@
 import React, { useEffect, useState } from "react";
 import "../../App.css";
 import "../../index.css";
-import axios from "axios";
+import axios, { AxiosError, HttpStatusCode } from "axios";
 import { useCookies } from "react-cookie";
-import checkAndRenewToken from "../../utils/renewToken";
+import Popup from "../popup";
 
 const LoginForm: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [username, setUsername] = useState("");
-  const [cookies, setCookie] = useCookies([
+  const [, setCookie] = useCookies([
     "accessToken",
     "refreshToken",
     "accessTokenEx",
     "userID",
   ]);
-
-  const [success, setSuccess] = useState(false);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-
+  const [showWarning, setShowWarning] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
   const instance = axios.create({
-    baseURL: "http://127.0.0.1:4444/", // Replace with your API base UR
+    baseURL: "http://localhost:4444/", // Replace with your API base UR
   });
 
+  const [signUpSuccess, setSignUpSuccess] = useState(false);
+
   useEffect(() => {
-    const renewTokenParam: RenewToken = {
-      accessTokenExpire: new Date(cookies.accessTokenEx),
-      refreshToken: cookies.refreshToken,
-    };
-    // Call the checkAndRenewToken function before making any API call
-    checkAndRenewToken(renewTokenParam, setCookie).then(() => {
-      instance
-        .get("/account/list", {
-          headers: {
-            Authorization: `Bearer ${cookies.accessToken}`,
-          },
-        })
-        .then((response) => {
-          if (response.status == 200) {
-            setAccounts(response.data); // Set the data in state
-          }
-          console.log(response.data);
-        })
-        .catch((error) => console.error("Error fetching data:", error));
-    });
-  }, [success]);
+    if (signUpSuccess) {
+      login();
+    }
+  }, [signUpSuccess]);
+
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
@@ -59,52 +43,76 @@ const LoginForm: React.FC = () => {
     setUsername(e.target.value);
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleShowWarning = (message: string) => {
+    setErrorMessage(message);
+    setShowWarning(true);
+  };
 
+  const handleCloseWarning = () => {
+    setShowWarning(false);
+    setErrorMessage('');
+  };
+
+  const handleSignUp = (e: React.FormEvent) => {
+    e.preventDefault();
+    signUp()
+  };
+
+  const signUp = async () => {
     const formData = new URLSearchParams();
     formData.append("username", username);
     formData.append("email", email);
     formData.append("password", password);
 
     try {
-      await instance.post("http://127.0.0.1:4444/auth/signup", formData, {
+      const resp = await instance.post("/auth/signup", formData, {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
       });
-    } catch (error) {
-      console.error("Form submission error:", error);
+
+      if (resp.status == HttpStatusCode.Created) {
+        setSignUpSuccess(true);
+      }
+    } catch (err) {
+       if (axios.isAxiosError(err)) {
+        const axiosErr = err as AxiosError
+        const errorMessage = axiosErr.response?.data;
+        handleShowWarning(`An error occurred: ${errorMessage}`);
+      }
     }
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    login();
+  };
 
+  const login = async () => {
     const formData = new URLSearchParams();
     formData.append("email", email);
     formData.append("password", password);
-
     try {
-      const resp = await instance.post(
-        "http://127.0.0.1:4444/auth/login",
-        formData,
-        {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-        }
-      );
+      const resp = await instance.post("/auth/login", formData, {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      });
 
-      const { access_token, access_token_expire, refresh_token, user_id } =
-        resp.data as LoginResponseJson;
-      setCookie("accessToken", access_token);
-      setCookie("accessTokenEx", access_token_expire);
-      setCookie("refreshToken", refresh_token);
-      setCookie("userID", user_id);
-      setSuccess(true);
-    } catch (error) {
-      console.error("Form submission error:", error);
+      if (resp.status == 200) {
+        const { access_token, access_token_expire, refresh_token, user_id } =
+          resp.data as LoginResponseJson;
+        setCookie("accessToken", access_token);
+        setCookie("accessTokenEx", access_token_expire);
+        setCookie("refreshToken", refresh_token);
+        setCookie("userID", user_id);
+      } 
+    } catch(err) {
+      if (axios.isAxiosError(err)) {
+        const axiosErr = err as AxiosError
+        const errorMessage = axiosErr.response?.data;
+        handleShowWarning(`An error occurred: ${errorMessage}`);
+      }
     }
   };
 
@@ -183,14 +191,9 @@ const LoginForm: React.FC = () => {
           </button>
         </div>
       </form>
-      <div>
-        <h2>Fetched Data:</h2>
-        <ul>
-          {accounts.map((account, index) => (
-            <li key={index}>{account.account_id}</li>
-          ))}
-        </ul>
-      </div>
+      {showWarning && (
+        <Popup message={errorMessage} onClose={handleCloseWarning} />
+      )}
     </div>
   );
 };

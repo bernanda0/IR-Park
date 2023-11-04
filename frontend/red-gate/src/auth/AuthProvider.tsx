@@ -16,13 +16,11 @@ export const AuthProvider: React.FC<any> = ({ children }) => {
 
     useEffect(() => {
         const storedUserID = cookies.userID;
-        console.log(storedUserID)
         if (storedUserID) {
             setUser(storedUserID);
-            console.log("User is already logged in.");
             navigate("/");
         } else {
-            console.log("User is not logged in.");
+            navigate("/login")
         }
 
         setLoading(false);

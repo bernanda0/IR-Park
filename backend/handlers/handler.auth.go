@@ -6,13 +6,14 @@ import (
 	"net/http"
 	"time"
 
+	"golang.org/x/crypto/bcrypt"
 	"redgate.com/b/db/sqlc"
 	"redgate.com/b/token"
 	"redgate.com/b/utils"
 )
 
 const (
-	ACCESS_TOKEN_DURATION  = 100
+	ACCESS_TOKEN_DURATION  = 5
 	REFRESH_TOKEN_DURATION = 12
 )
 
@@ -42,25 +43,20 @@ func (auth_h *AuthHandler) login(w http.ResponseWriter, r *http.Request) error {
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 
-	ok := utils.EmailIsValid(email)
-	if !ok {
-		http.Error(w, "Invalid Email", http.StatusInternalServerError)
-		return errors.New("invalid email")
-	}
-
-	ok = utils.PasswordIsValid(password)
-	if !ok {
-		http.Error(w, "Invalid Password", http.StatusInternalServerError)
-		return errors.New("invalid password")
-	}
-
-	// check if user exist
 	user, err := auth_h.h.q.GetAccountbyEmail(r.Context(), email)
 	if err != nil {
-		http.Error(w, "Account not found! Register first", http.StatusInternalServerError)
+		http.Error(w, "Account not found! Register first", http.StatusUnauthorized)
 		return errors.New("account not found, register first")
 	}
 
+	hashed_password, _ := auth_h.h.q.GetHashedPassword(r.Context(), email)
+	err = bcrypt.CompareHashAndPassword([]byte(hashed_password), []byte(password))
+	if err != nil {
+		http.Error(w, "Wrong Password", http.StatusUnauthorized)
+		return errors.New("wrong password")
+	}
+
+	// check if user exist
 	access_token_duration := time.Minute * ACCESS_TOKEN_DURATION
 	a_token, a_payload, err := auth_h.t.GenerateToken(user.AccountID, user.Username, access_token_duration)
 	if err != nil {
@@ -99,7 +95,7 @@ func (auth_h *AuthHandler) login(w http.ResponseWriter, r *http.Request) error {
 		Username:       user.Username,
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	toJSON(w, res)
 	return nil
 }

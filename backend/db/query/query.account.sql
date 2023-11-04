@@ -6,10 +6,6 @@ WHERE account_id = $1 LIMIT 1;
 SELECT * FROM account
 WHERE email = $1 LIMIT 1;
 
--- name: ListAccounts :many
-SELECT * FROM account
-ORDER BY created_at ASC;
-
 -- name: CreateAccount :one
 INSERT INTO account (
   username, email, password_hash
@@ -18,10 +14,13 @@ INSERT INTO account (
 )
 RETURNING *;
 
--- name: DeleteAccount :one
-DELETE FROM account
-WHERE account_id = $1
-RETURNING *;
+-- name: GetEmail :one
+SELECT email FROM account 
+WHERE email = $1;
+
+-- name: GetHashedPassword :one
+SELECT password_hash FROM account 
+WHERE email = $1;
 
 -- name: AccountSubscribe :one
 UPDATE account SET is_subscribe = true WHERE account_id = $1

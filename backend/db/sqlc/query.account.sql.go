@@ -51,26 +51,6 @@ func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (A
 	return i, err
 }
 
-const deleteAccount = `-- name: DeleteAccount :one
-DELETE FROM account
-WHERE account_id = $1
-RETURNING account_id, username, email, password_hash, created_at, is_subscribe
-`
-
-func (q *Queries) DeleteAccount(ctx context.Context, accountID string) (Account, error) {
-	row := q.db.QueryRowContext(ctx, deleteAccount, accountID)
-	var i Account
-	err := row.Scan(
-		&i.AccountID,
-		&i.Username,
-		&i.Email,
-		&i.PasswordHash,
-		&i.CreatedAt,
-		&i.IsSubscribe,
-	)
-	return i, err
-}
-
 const getAccount = `-- name: GetAccount :one
 SELECT account_id, username, email, password_hash, created_at, is_subscribe FROM account
 WHERE account_id = $1 LIMIT 1
@@ -109,37 +89,25 @@ func (q *Queries) GetAccountbyEmail(ctx context.Context, email string) (Account,
 	return i, err
 }
 
-const listAccounts = `-- name: ListAccounts :many
-SELECT account_id, username, email, password_hash, created_at, is_subscribe FROM account
-ORDER BY created_at ASC
+const getEmail = `-- name: GetEmail :one
+SELECT email FROM account 
+WHERE email = $1
 `
 
-func (q *Queries) ListAccounts(ctx context.Context) ([]Account, error) {
-	rows, err := q.db.QueryContext(ctx, listAccounts)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Account
-	for rows.Next() {
-		var i Account
-		if err := rows.Scan(
-			&i.AccountID,
-			&i.Username,
-			&i.Email,
-			&i.PasswordHash,
-			&i.CreatedAt,
-			&i.IsSubscribe,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
+func (q *Queries) GetEmail(ctx context.Context, email string) (string, error) {
+	row := q.db.QueryRowContext(ctx, getEmail, email)
+	err := row.Scan(&email)
+	return email, err
+}
+
+const getHashedPassword = `-- name: GetHashedPassword :one
+SELECT password_hash FROM account 
+WHERE email = $1
+`
+
+func (q *Queries) GetHashedPassword(ctx context.Context, email string) (string, error) {
+	row := q.db.QueryRowContext(ctx, getHashedPassword, email)
+	var password_hash string
+	err := row.Scan(&password_hash)
+	return password_hash, err
 }

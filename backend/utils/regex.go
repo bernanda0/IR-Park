@@ -21,13 +21,11 @@ func PasswordIsValid(password string) bool {
 }
 
 func PlateNumberIsValid(plate string) bool {
-	pattern1 := `^[A-Z]{2}\d{4}[A-Z]{2}$`
-	pattern2 := `^[A-Z]\d{4}[A-Z]$`
+	pattern := `^[A-Z]{1,2}\d{3,4}[A-Z]{1,2}`
 
 	// Compile the regular expressions
-	regex1 := regexp.MustCompile(pattern1)
-	regex2 := regexp.MustCompile(pattern2)
+	regex1 := regexp.MustCompile(pattern)
 
 	// Check if the plate number matches either format
-	return regex1.MatchString(plate) || regex2.MatchString(plate)
+	return regex1.MatchString(plate)
 }

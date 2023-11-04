@@ -40,6 +40,8 @@ func (ph *PlateHandler) createPlateId(w http.ResponseWriter, r *http.Request) er
 	// Retrieve form values
 	accountID := r.FormValue("account_id")
 	plateNumber := r.FormValue("plate_number")
+
+	ph.h.l.Println(plateNumber)
 	if !utils.PlateNumberIsValid(plateNumber) {
 		http.Error(w, "Invalid plate number", http.StatusInternalServerError)
 		return errors.New("invalid plate number")

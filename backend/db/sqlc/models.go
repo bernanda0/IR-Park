@@ -20,6 +20,15 @@ type Account struct {
 	IsSubscribe  sql.NullBool `json:"is_subscribe"`
 }
 
+type Log struct {
+	EventID         int32          `json:"event_id"`
+	TransactionTime sql.NullTime   `json:"transaction_time"`
+	AccountID       sql.NullString `json:"account_id"`
+	VID             sql.NullString `json:"v_id"`
+	Info            sql.NullString `json:"info"`
+	IpAddress       sql.NullString `json:"ip_address"`
+}
+
 type Session struct {
 	ID           uuid.UUID `json:"id"`
 	AccountID    string    `json:"account_id"`

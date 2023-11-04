@@ -11,15 +11,15 @@ import {
 import "./App.css";
 import "./index.css";
 import LoginForm from "./page/login";
-import HomePage from "./page/home_page";
+import HomePage from "./page/home";
 import { AuthProvider } from "./auth/AuthProvider";
 
 function App() {
   return (
       <AuthProvider>
         <Routes>
-          <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginForm />} />
+          <Route path="/" element={<HomePage />} />
         </Routes>
       </AuthProvider>
   );

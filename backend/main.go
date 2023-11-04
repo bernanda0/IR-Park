@@ -20,8 +20,10 @@ import (
 func main() {
 	l := log.New(os.Stdout, "RED-GATE-SERVER-", log.LstdFlags)
 	ctx := context.Background()
+
+	env := os.Getenv("APP_ENV")
 	// load env
-	err := godotenv.Load("dev.env")
+	err := godotenv.Load(".env." + env)
 	if err != nil {
 		l.Fatalf("Error reding the .env %s", err)
 	}
@@ -35,7 +37,7 @@ func main() {
 	defer db.Close()
 
 	server := &http.Server{
-		Addr:        "127.0.0.1:" + os.Getenv("PORT"),
+		Addr:        "0.0.0.0:" + os.Getenv("PORT"),
 		Handler:     defineMultiplexer(l, queries),
 		IdleTimeout: 30 * time.Second,
 		ReadTimeout: time.Second,
@@ -77,7 +79,6 @@ func defineMultiplexer(l *log.Logger, q *sqlc.Queries) http.Handler {
 
 	// reference to the handler
 	hello_handler := handlers.NewHello(l)
-	account_handler := handlers.NewAccountHandler(l, q, &u)
 	token, err := token.NewPasetoMaker(os.Getenv("PASETO_KEY"))
 	if err != nil {
 		log.Fatal("Failed creating Paseto token")
@@ -89,7 +90,6 @@ func defineMultiplexer(l *log.Logger, q *sqlc.Queries) http.Handler {
 	// handle multiplexer
 	mux := http.NewServeMux()
 	mux.Handle("/", hello_handler)
-	mux.HandleFunc("/account/list", account_handler.ListAccountsH)
 
 	mux.HandleFunc("/auth/login", auth_handler.Login)
 	mux.HandleFunc("/auth/signup", auth_handler.Signup)

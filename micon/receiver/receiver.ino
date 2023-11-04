@@ -10,7 +10,9 @@ const char* password = "12345678";
 // need adjustment (this is only local dev)
 const char* endpoint = "http://192.168.137.1:4444/plate/verify";
 
-const String payload = "v_id=VID8BCFBE19486F9947";
+// ini bakal dikirim oleh transmitter
+const String receivedID = "VID8BCFBE19486F9947";
+const String payload = "v_id=" + receivedID;
 
 WiFiMulti wifiMulti;
 void setup() {

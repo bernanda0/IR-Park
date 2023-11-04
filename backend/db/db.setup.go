@@ -5,22 +5,20 @@ import (
 	"log"
 	"os"
 
-	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"redgate.com/b/db/sqlc"
 )
 
-// TODO adding sqlc for the ORM
 func Instantiate(l *log.Logger) (*sql.DB, *sqlc.Queries) {
-	err := godotenv.Load("dev.env")
-	if err != nil {
-		l.Fatalf("Error reding the .env %s", err)
-	}
-
 	DB_USER := os.Getenv("DB_USER")
 	DB_PASS := os.Getenv("DB_PASS")
 	DB_NAME := os.Getenv("DB_NAME")
-	connection_string := "postgresql://" + DB_USER + ":" + DB_PASS + "@localhost:5432/" + DB_NAME + "?sslmode=disable"
+	DB_HOST := os.Getenv("DB_HOST")
+	ssl := ""
+	if DB_HOST == "localhost:5432" {
+		ssl = "?sslmode=disable"
+	}
+	connection_string := "postgresql://" + DB_USER + ":" + DB_PASS + "@" + DB_HOST + "/" + DB_NAME + ssl
 
 	db, err1 := sql.Open(os.Getenv("DB_DRIVER"), connection_string)
 	if err1 != nil {
@@ -30,10 +28,10 @@ func Instantiate(l *log.Logger) (*sql.DB, *sqlc.Queries) {
 
 	err2 := db.Ping()
 	if err2 != nil {
-		l.Println("Error connecting to DB ", err2)
+		l.Println("Error connecting to DB", err2)
 		return nil, nil
 	}
 
-	l.Println("🛢️  DB Connected")
+	l.Println("🛢️  DB Connected to", DB_HOST)
 	return db, sqlc.New(db)
 }

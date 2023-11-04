@@ -26,6 +26,7 @@ void setup() {
  */
 uint8_t sCommand = 0x34;
 uint8_t sRepeats = 0;
+String data = "VIDF294CD368E92FD0D";
 
 void loop() {
     /*

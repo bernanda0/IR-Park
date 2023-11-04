@@ -7,10 +7,15 @@ IMAGE_NAME = my-postgres:latest
 CONTAINER_NAME = $(PREFIX)-container
 
 #
-run:
+run-local:
+	export APP_ENV=local
 	make pg-start && \
 	go run main.go
 
+run-remote:
+	export APP_ENV=remote && \
+	go run main.go
+	
 # FIRST START
 pg-run:
 	docker run -d --name $(CONTAINER_NAME) -p 5432:5432 $(IMAGE_NAME)
@@ -34,6 +39,8 @@ pg-dropdb:
 	docker exec -it $(CONTAINER_NAME) dropdb -U postgres $(DB_NAME)
 pg-psql:
 	docker exec -it $(CONTAINER_NAME) psql -U $(USERNAME) -d $(DB_NAME)
+pg-psql-neon: 
+	psql -h "postgres://inotbnri:SMNpjL8ail9O@ep-white-meadow-150497.ap-southeast-1.aws.neon.tech/red-gate"
 pg-psql-test:
 	docker exec -it $(CONTAINER_NAME) psql -U $(USERNAME) -d $(DB_NAME_TEST)
 
@@ -43,6 +50,10 @@ migrate-init:
 	migrate create -ext sql -dir db/migration -seq db_scheme
 migrate-up:
 	migrate -path db/migration -database "postgresql://$(USERNAME):$(PASSWORD)@localhost:5432/$(DB_NAME)?sslmode=disable" -verbose up
+# migrate-up-neon:
+# 	migrate -path db/migration -database "postgres://inotbnri:SMNpjL8ail9O@ep-white-meadow-150497.ap-southeast-1.aws.neon.tech/red-gate" -verbose up
+# migrate-down-neon: 
+# 	migrate -path db/migration -database "postgres://inotbnri:SMNpjL8ail9O@ep-white-meadow-150497.ap-southeast-1.aws.neon.tech/red-gate" -verbose down 
 migrate-up-test:
 	migrate -path db/migration -database "postgresql://$(USERNAME):$(PASSWORD)@localhost:5432/$(DB_NAME_TEST)?sslmode=disable" -verbose up
 migrate-down:
