@@ -26,8 +26,8 @@ CREATE TABLE IF NOT EXISTS logs (
     transaction_time TIMESTAMP DEFAULT NOW(),
     account_id VARCHAR(32),
     v_id VARCHAR(32),
-    info VARCHAR(32),
-    ip_address VARCHAR(16)
+    location VARCHAR(32),
+    ip_address VARCHAR(32)
 );
 
 CREATE INDEX IF NOT EXISTS acc_id_index ON account(account_id);

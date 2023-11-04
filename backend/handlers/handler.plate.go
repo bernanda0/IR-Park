@@ -107,17 +107,26 @@ func (ph *PlateHandler) verifyPlateId(w http.ResponseWriter, r *http.Request) er
 	}
 	// check if the plate id exist
 	vID := r.FormValue("v_id")
+	location := r.FormValue("location")
 	response, err := ph.h.q.VerifyVehicle(r.Context(), vID)
 	if err != nil {
 		http.Error(w, "Verifying failed", http.StatusInternalServerError)
 		return err
 	}
 
-	plate_number := response.String
+	plate_number := response.PlateNumber.String
 	if utils.GeneratePlateID(plate_number) != vID {
 		http.Error(w, "Mismatch plate number with the hash value", http.StatusInternalServerError)
 		return errors.New("Mismatch")
 	}
+
+	logParam := sqlc.GenerateLogsParams{
+		AccountID: response.AccountID,
+		VID:       utils.StringToNullString(response.VID),
+		Location:  utils.StringToNullString(location),
+		IpAddress: utils.StringToNullString(r.RemoteAddr),
+	}
+	ph.h.q.GenerateLogs(r.Context(), logParam)
 
 	w.WriteHeader(http.StatusOK)
 	toJSON(w, vID)

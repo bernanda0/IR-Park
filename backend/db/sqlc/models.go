@@ -25,7 +25,7 @@ type Log struct {
 	TransactionTime sql.NullTime   `json:"transaction_time"`
 	AccountID       sql.NullString `json:"account_id"`
 	VID             sql.NullString `json:"v_id"`
-	Info            sql.NullString `json:"info"`
+	Location        sql.NullString `json:"location"`
 	IpAddress       sql.NullString `json:"ip_address"`
 }
 

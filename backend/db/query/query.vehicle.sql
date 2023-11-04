@@ -11,7 +11,7 @@ INNER JOIN account AS a ON vd.account_id = a.account_id
 WHERE vd.account_id = $1;
 
 -- name: VerifyVehicle :one
-SELECT vd.plate_number
+SELECT vd.plate_number, vd.v_id, vd.account_id
 FROM vehicle_data AS vd
 INNER JOIN account AS a ON vd.account_id = a.account_id
 WHERE vd.v_id = $1 AND a.is_subscribe = true;
