@@ -22,6 +22,9 @@ func main() {
 	ctx := context.Background()
 
 	env := os.Getenv("APP_ENV")
+	if env == "" {
+		env = "remote"
+	}
 	// load env
 	err := godotenv.Load(".env." + env)
 	if err != nil {
@@ -98,6 +101,7 @@ func defineMultiplexer(l *log.Logger, q *sqlc.Queries) http.Handler {
 	mux.HandleFunc("/plate/create", plate_handler.CreatePlateHandler)
 	mux.HandleFunc("/plate/getID", plate_handler.GetPlateIDHandler)
 	mux.HandleFunc("/plate/verify", plate_handler.VerifyPlateHandler)
+	mux.HandleFunc("/logs", plate_handler.GetLogs)
 
 	corsMiddleware := cors.AllowAll().Handler
 

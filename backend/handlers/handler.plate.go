@@ -31,6 +31,12 @@ func (plate_h *PlateHandler) VerifyPlateHandler(w http.ResponseWriter, r *http.R
 	plate_h.h.handleRequest(hp, nil)
 }
 
+func (plate_h *PlateHandler) GetLogs(w http.ResponseWriter, r *http.Request) {
+	hp := HandlerParam{w, r, http.MethodGet, plate_h.getLogs}
+	plate_h.h.handleRequest(hp, plate_h.h.u)
+}
+
+// Implementation
 func (ph *PlateHandler) createPlateId(w http.ResponseWriter, r *http.Request) error {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "Error parsing form data", http.StatusBadRequest)
@@ -130,5 +136,23 @@ func (ph *PlateHandler) verifyPlateId(w http.ResponseWriter, r *http.Request) er
 
 	w.WriteHeader(http.StatusOK)
 	toJSON(w, vID)
+	return nil
+}
+
+func (ph *PlateHandler) getLogs(w http.ResponseWriter, r *http.Request) error {
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Error parsing form data", http.StatusBadRequest)
+		return err
+	}
+
+	account_id := r.FormValue("account_id")
+	response, err := ph.h.q.GetLogs(r.Context(), utils.StringToNullString(account_id))
+	if err != nil {
+		http.Error(w, "Failed to get logs", http.StatusInternalServerError)
+		return err
+	}
+
+	w.WriteHeader(http.StatusOK)
+	toJSON(w, response)
 	return nil
 }

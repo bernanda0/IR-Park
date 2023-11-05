@@ -1,5 +1,5 @@
 import axios, { AxiosError, HttpStatusCode } from "axios";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useCookies } from "react-cookie";
 import checkAndRenewToken from "../../utils/renewToken";
 import { generateInoContent } from "../../static/inoGenerator";
@@ -9,6 +9,7 @@ function HomePage() {
   const [plateID, setPlateID] = useState("");
   const [isSubscribe, setIsSubscribe] = useState(false);
   const [plateNumber, setPlateNumber] = useState("");
+  const [logData, setLogData] = useState<LogData[]>([]);
   const [registerPlateSuccess, setRegisterPlate] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -29,6 +30,7 @@ function HomePage() {
 
   useEffect(() => {
     checkAndRenewToken(renewTokenParam, setCookie).then(getID);
+    // setInterval(getHistory, 2000);
   }, [,registerPlateSuccess]);
 
   const handleRegister = () => {
@@ -118,6 +120,25 @@ function HomePage() {
     URL.revokeObjectURL(objectURL);
   };
 
+  const getHistory = () => {
+    const params = {
+      account_id: cookies.userID,
+    };
+
+    checkAndRenewToken(renewTokenParam, setCookie).then(() => {
+      instance.get("/logs", {
+        params,
+        headers: {
+          Authorization: `Bearer ${cookies.accessToken}`,
+        },
+      }).then((response)=>{
+        const data = response.data as LogData[];
+        setLogData(data);
+        console.log(data)
+      })
+    })
+  } 
+
   return (
     <div>
       {!plateID ? (
@@ -145,6 +166,29 @@ function HomePage() {
       {showWarning && (
         <Popup message={errorMessage} onClose={handleCloseWarning} />
       )}
+      <div>
+        <button onClick={getHistory}>SEE LOG</button>
+      </div>
+      <h4>Log Data</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>Event ID</th>
+            <th>Location</th>
+            <th>Transaction Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          {logData.map((entry, index) => (
+            <tr key={index}>
+              <td>{entry.event_id}</td>
+              <td>{entry.location.String}</td>
+              <td>{entry.transaction_time.Time}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
     </div>
   );
 }

@@ -41,3 +41,38 @@ func (q *Queries) GenerateLogs(ctx context.Context, arg GenerateLogsParams) (Log
 	)
 	return i, err
 }
+
+const getLogs = `-- name: GetLogs :many
+SELECT event_id, transaction_time, location 
+FROM logs
+WHERE account_id = $1
+`
+
+type GetLogsRow struct {
+	EventID         int32          `json:"event_id"`
+	TransactionTime sql.NullTime   `json:"transaction_time"`
+	Location        sql.NullString `json:"location"`
+}
+
+func (q *Queries) GetLogs(ctx context.Context, accountID sql.NullString) ([]GetLogsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getLogs, accountID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetLogsRow
+	for rows.Next() {
+		var i GetLogsRow
+		if err := rows.Scan(&i.EventID, &i.TransactionTime, &i.Location); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
