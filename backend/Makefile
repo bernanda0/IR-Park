@@ -7,6 +7,9 @@ IMAGE_NAME = my-postgres:latest
 CONTAINER_NAME = $(PREFIX)-container
 
 #
+run-docker:
+	docker run redgate -p 4444:4444
+
 run-local:
 	export APP_ENV=local
 	make pg-start && \

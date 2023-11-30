@@ -7,18 +7,17 @@ import (
 )
 
 func GeneratePlateID(plate string) string {
-	// Initialize a new FNV-1a hash
-	h := fnv.New64a()
+	// Initialize a new FNV-1a hash (32-bit)
+	h := fnv.New32a()
 
 	// Write the plate data to the hash
 	h.Write([]byte(plate))
 
 	// Sum the hash and convert it to a string
-	hash := h.Sum64()
-	uniqueChars := fmt.Sprintf("%04X", hash) // Convert to a 4-character hexadecimal string
+	hash := h.Sum32()
+	uniqueChars := fmt.Sprintf("%08X", hash) // Convert to an 8-character hexadecimal string
 
 	return "VID" + uniqueChars
-
 }
 
 func NullStringToString(ns sql.NullString) string {
