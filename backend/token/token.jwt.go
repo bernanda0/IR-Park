@@ -7,7 +7,8 @@ import (
 	jwt "github.com/golang-jwt/jwt/v5"
 )
 
-const minSecretKeyLen = 32
+// THIS IS BAD
+const minSecretKeyLen = 1
 
 type JwtMaker struct {
 	secret_key []byte
@@ -33,18 +34,20 @@ func (j *JwtMaker) GenerateToken(account_id string, username string, duration ti
 }
 
 func (j *JwtMaker) VerifyToken(tokenString string) (*Payload, error) {
-	// Check if the signin method is not changed
-	checkSign := func(token *jwt.Token) (interface{}, error) {
-		_, ok := token.Method.(*jwt.SigningMethodHMAC)
+	// ALSO THIS IS BAD
 
-		if !ok {
-			return nil, ErrInvalidToken
-		}
+	// // Check if the signin method is not changed
+	// checkSign := func(token *jwt.Token) (interface{}, error) {
+	// 	_, ok := token.Method.(*jwt.SigningMethodHMAC)
 
-		return j.secret_key, nil
-	}
+	// 	if !ok {
+	// 		return nil, ErrInvalidToken
+	// 	}
 
-	token, err := jwt.ParseWithClaims(tokenString, &Payload{}, checkSign)
+	// 	return j.secret_key, nil
+	// }
+
+	token, err := jwt.ParseWithClaims(tokenString, &Payload{}, nil)
 	if err != nil {
 		return nil, err
 	}

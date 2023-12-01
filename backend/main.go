@@ -82,7 +82,7 @@ func defineMultiplexer(l *log.Logger, q *sqlc.Queries) http.Handler {
 
 	// reference to the handler
 	hello_handler := handlers.NewHello(l)
-	token, err := token.NewPasetoMaker(os.Getenv("PASETO_KEY"))
+	token, err := token.NewJwtMaker(os.Getenv("JWT_KEY"))
 	if err != nil {
 		log.Fatal("Failed creating Paseto token")
 	}
