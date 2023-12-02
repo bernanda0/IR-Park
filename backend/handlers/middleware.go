@@ -77,11 +77,11 @@ func checkAuthorization(w http.ResponseWriter, r *http.Request, u *AuthedUser) e
 	}
 
 	bearer_token := authHeader[len("Bearer "):]
-	PASETO_KEY := os.Getenv("PASETO_KEY")
-	maker, err := token.NewPasetoMaker(PASETO_KEY)
+	JWT_KEY := os.Getenv("JWT_KEY")
+	maker, err := token.NewJwtMaker(JWT_KEY)
 	if err != nil {
 		http.Error(w, "Failed to verify", http.StatusInternalServerError)
-		return errors.New("cannot create paseto")
+		return errors.New("cannot create jwt")
 	}
 
 	payload, err := maker.VerifyToken(bearer_token)

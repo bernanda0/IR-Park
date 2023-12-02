@@ -37,17 +37,11 @@ func (j *JwtMaker) VerifyToken(tokenString string) (*Payload, error) {
 	// ALSO THIS IS BAD
 
 	// // Check if the signin method is not changed
-	// checkSign := func(token *jwt.Token) (interface{}, error) {
-	// 	_, ok := token.Method.(*jwt.SigningMethodHMAC)
+	keyFunc := func(token *jwt.Token) (interface{}, error) {
+		return j.secret_key, nil
+	}
 
-	// 	if !ok {
-	// 		return nil, ErrInvalidToken
-	// 	}
-
-	// 	return j.secret_key, nil
-	// }
-
-	token, err := jwt.ParseWithClaims(tokenString, &Payload{}, nil)
+	token, err := jwt.ParseWithClaims(tokenString, &Payload{}, keyFunc)
 	if err != nil {
 		return nil, err
 	}

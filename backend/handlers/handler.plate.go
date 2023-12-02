@@ -82,8 +82,8 @@ func (ph *PlateHandler) createPlateId(w http.ResponseWriter, r *http.Request) er
 func (ph *PlateHandler) getPlateId(w http.ResponseWriter, r *http.Request) error {
 	authHeader := r.Header.Get("Authorization")
 	access_token := authHeader[len("Bearer "):]
-	PASETO_KEY := os.Getenv("PASETO_KEY")
-	maker, err := token.NewPasetoMaker(PASETO_KEY)
+	JWT_KEY := os.Getenv("JWT_KEY")
+	maker, _ := token.NewJwtMaker(JWT_KEY)
 
 	payload, err := maker.VerifyToken(access_token)
 	if err != nil {

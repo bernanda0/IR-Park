@@ -30,6 +30,10 @@ type PlateHandler struct {
 	h *Handler
 }
 
+type WalletHandler struct {
+	h *Handler
+}
+
 type HandlerParam struct {
 	w           http.ResponseWriter
 	r           *http.Request

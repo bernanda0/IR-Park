@@ -89,6 +89,7 @@ func defineMultiplexer(l *log.Logger, q *sqlc.Queries) http.Handler {
 	auth_handler := handlers.NewAuthHandler(l, q, &u, &token)
 	token_handler := handlers.NewTokenHandler(l, q, &u, &token)
 	plate_handler := handlers.NewPlateIDHandler(l, q, &u)
+	wallet_hanlder := handlers.NewWalletHandler(l, q, &u)
 
 	// handle multiplexer
 	mux := http.NewServeMux()
@@ -102,6 +103,9 @@ func defineMultiplexer(l *log.Logger, q *sqlc.Queries) http.Handler {
 	mux.HandleFunc("/plate/getID", plate_handler.GetPlateIDHandler)
 	mux.HandleFunc("/plate/verify", plate_handler.VerifyPlateHandler)
 	mux.HandleFunc("/logs", plate_handler.GetLogs)
+
+	mux.HandleFunc("/wallet/balance", wallet_hanlder.GetBalance)
+	mux.HandleFunc("/wallet/topUp", wallet_hanlder.TopUpHandler)
 
 	corsMiddleware := cors.AllowAll().Handler
 
