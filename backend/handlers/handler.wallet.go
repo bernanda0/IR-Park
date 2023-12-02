@@ -33,7 +33,7 @@ func (wh *WalletHandler) topUpHandler(w http.ResponseWriter, r *http.Request) er
 	amount := r.FormValue("amount")
 	accountID := wh.h.u.UserID
 	walletID, _ := wh.h.q.GetWalletID(r.Context(), utils.StringToNullString(accountID))
-
+	wh.h.l.Println("Will top up to " + walletID + " " + accountID)
 	topUpParams := sqlc.TopUpParams{
 		Amount:   utils.StringToNullInt(amount),
 		WalletID: walletID,

@@ -21,6 +21,10 @@ type AccountHandler struct {
 	h *Handler
 }
 
+type DownloadHandler struct {
+	h *Handler
+}
+
 type AuthHandler struct {
 	h *Handler
 	t token.Maker

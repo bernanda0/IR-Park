@@ -82,6 +82,7 @@ func defineMultiplexer(l *log.Logger, q *sqlc.Queries) http.Handler {
 
 	// reference to the handler
 	hello_handler := handlers.NewHello(l)
+	l.Println(os.Getenv("JWT_KEY"))
 	token, err := token.NewJwtMaker(os.Getenv("JWT_KEY"))
 	if err != nil {
 		log.Fatal("Failed creating Paseto token")
@@ -90,6 +91,7 @@ func defineMultiplexer(l *log.Logger, q *sqlc.Queries) http.Handler {
 	token_handler := handlers.NewTokenHandler(l, q, &u, &token)
 	plate_handler := handlers.NewPlateIDHandler(l, q, &u)
 	wallet_hanlder := handlers.NewWalletHandler(l, q, &u)
+	download_handler := handlers.NewDownloadHandler(l, q, &u)
 
 	// handle multiplexer
 	mux := http.NewServeMux()
@@ -106,6 +108,7 @@ func defineMultiplexer(l *log.Logger, q *sqlc.Queries) http.Handler {
 
 	mux.HandleFunc("/wallet/balance", wallet_hanlder.GetBalance)
 	mux.HandleFunc("/wallet/topUp", wallet_hanlder.TopUpHandler)
+	mux.HandleFunc("/download/files", download_handler.DownloadHandler)
 
 	corsMiddleware := cors.AllowAll().Handler
 

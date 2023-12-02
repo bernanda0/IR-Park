@@ -26,7 +26,7 @@ func (p *Payload) GetIssuedAt() (*jwt.NumericDate, error) {
 
 // GetIssuer implements jwt.Claims.
 func (*Payload) GetIssuer() (string, error) {
-	return "your-issuer-name", nil
+	return "red-gate", nil
 }
 
 // GetNotBefore implements jwt.Claims.

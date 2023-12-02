@@ -19,8 +19,10 @@ import {
   TableBody,
   TableCell,
   TableRow,
+  TextField,
   Typography,
 } from "@mui/material";
+import { DownloadRounded, Money } from "@mui/icons-material";
 
 const style = {
   position: "absolute" as "absolute",
@@ -33,26 +35,40 @@ const style = {
   border: "2px solid #000",
   boxShadow: 24,
   p: 4,
-  borderRadius: '12px',
-  overflowY: 'auto',
-  '&::-webkit-scrollbar': {
-    width: '12px',
+  borderRadius: "12px",
+  overflowY: "auto",
+  "&::-webkit-scrollbar": {
+    width: "12px",
   },
-  '&::-webkit-scrollbar-thumb': {
-    backgroundColor: '#888',
+  "&::-webkit-scrollbar-thumb": {
+    backgroundColor: "#888",
   },
-  '&::-webkit-scrollbar-track': {
-    backgroundColor: '#f1f1f1',
+  "&::-webkit-scrollbar-track": {
+    backgroundColor: "#f1f1f1",
   },
 };
 
+const style2 = {
+  position: "absolute" as "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  bgcolor: "white",
+  border: "2px solid #000",
+  boxShadow: 24,
+  p: 4,
+  borderRadius: "12px",
+};
 
 function HomePage() {
   const [plateID, setPlateID] = useState("");
   const [isSubscribe, setIsSubscribe] = useState(false);
   const [plateNumber, setPlateNumber] = useState("");
   const [logData, setLogData] = useState<LogData[]>([]);
-  const [open, setOpen] = useState(false);
+  const [openHistory, setOpenHistory] = useState(false);
+  const [openBalance, setOpenBalance] = useState(false);
+  const [balance, setBalance] = useState(0);
+  const [topUpAmount, setTopUpAmount] = useState(0);
   const [registerPlateSuccess, setRegisterPlate] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
@@ -67,7 +83,8 @@ function HomePage() {
     refreshToken: cookies.refreshToken,
   };
 
-  const handleClose = () => setOpen(false);
+  const handleCloseHistory = () => setOpenHistory(false);
+  const handleCloseBalance = () => setOpenBalance(false);
 
   const instance = axios.create({
     baseURL: "http://localhost:4444/", // Replace with your API base UR
@@ -121,7 +138,7 @@ function HomePage() {
   const registerPlate = () => {
     const formData = new URLSearchParams();
     formData.append("account_id", cookies.userID);
-    formData.append("plate_number", plateNumber);
+    formData.append("plate_number", plateNumber.toUpperCase());
 
     instance
       .post("http://localhost:4444/plate/create", formData, {
@@ -145,6 +162,96 @@ function HomePage() {
       });
   };
 
+  const getBalance = () => {
+    checkAndRenewToken(renewTokenParam, setCookie).then(() => {
+      instance
+        .get("/wallet/balance", {
+          headers: {
+            Authorization: `Bearer ${cookies.accessToken}`,
+          },
+        })
+        .then((response) => {
+          if (response.status == 200) {
+            const balance = response.data;
+            setBalance(balance);
+            console.log(balance);
+            setOpenBalance(true);
+          }
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    });
+  };
+
+  const handleTopUp = () => {
+    const formData = new URLSearchParams();
+    formData.append("amount", "" + topUpAmount);
+
+    checkAndRenewToken(renewTokenParam, setCookie).then(() => {
+      instance
+        .post("http://localhost:4444/wallet/topUp", formData, {
+          headers: {
+            Authorization: `Bearer ${cookies.accessToken}`,
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+        })
+        .then((response) => {
+          if (response.status == HttpStatusCode.Ok) {
+            setOpenBalance(false);
+            setTopUpAmount(0);
+            setBalance(response.data + balance);
+          } else {
+          }
+        })
+        .catch((err) => {
+          if (axios.isAxiosError(err)) {
+            const axiosErr = err as AxiosError;
+            const errorMessage = axiosErr.response?.data;
+            handleShowWarning(`An error occurred: ${errorMessage}`);
+          }
+        });
+    });
+  };
+
+  const handleDownload = () => {
+    checkAndRenewToken(renewTokenParam, setCookie).then(() => {
+      instance
+        .get("http://localhost:4444/download/files", {
+          headers: {
+            Authorization: `Bearer ${cookies.accessToken}`,
+          },
+          responseType: "blob",
+        })
+        .then((response) => {
+
+          if (response.status != HttpStatusCode.Ok) return
+          // Create a Blob from the binary data
+          const blob = new Blob([response.data], {
+            type: response.headers["content-type"],
+          });
+
+          // Create a link element to trigger the download
+          const link = document.createElement("a");
+          link.href = window.URL.createObjectURL(blob);
+          link.download = "manual.pdf"; // Specify the desired filename
+
+          // Trigger a click on the link to start the download
+          document.body.appendChild(link);
+          link.click();
+
+          // Remove the link element from the DOM
+          document.body.removeChild(link);
+        })
+        .catch((err) => {
+          if (axios.isAxiosError(err)) {
+            const axiosErr = err as AxiosError;
+            const errorMessage = axiosErr.response?.data;
+            handleShowWarning(`An error occurred: ${errorMessage}`);
+          }
+        });
+    });
+  };
   const getHistory = () => {
     const params = {
       account_id: cookies.userID,
@@ -165,12 +272,12 @@ function HomePage() {
               // Convert timestamps to Date objects for comparison
               const dateA = new Date(a.transaction_time.Time).getTime();
               const dateB = new Date(b.transaction_time.Time).getTime();
-            
+
               // Compare and sort
               return dateB - dateA;
             });
             setLogData(data);
-            setOpen(true);
+            setOpenHistory(true);
           } else {
             setLogData([]);
           }
@@ -204,14 +311,33 @@ function HomePage() {
             plateID={plateID}
             isSubscribe={isSubscribe}
           ></DisplayIDComponent>
+          <div className="flex items-center justify-center">
+            <div className="mr-2 justify-center">
+              <Money />
+            </div>
+            <button
+              className="w-36 hover:border-green-600"
+              onClick={getBalance}
+            >
+              See Balance
+            </button>
+          </div>
         </div>
       )}
       <div className="flex items-center justify-center">
         <div className="mr-2 justify-center">
           <DataArrayIcon />
         </div>
-        <button className="w-36 hover:border-green-600" onClick={getHistory}>
+        <button className="w-36 hover:border-yellow-600" onClick={getHistory}>
           See History
+        </button>
+      </div>
+      <div className="flex items-center justify-center">
+        <div className="mr-1 justify-center">
+          <DownloadRounded />
+        </div>
+        <button className="w-36 hover:border-red-600" onClick={handleDownload}>
+          Download Manual
         </button>
       </div>
       <div className="flex items-center justify-center">
@@ -226,15 +352,15 @@ function HomePage() {
         <Modal
           aria-labelledby="transition-modal-title"
           aria-describedby="transition-modal-description"
-          open={open}
-          onClose={handleClose}
+          open={openHistory}
+          onClose={handleCloseHistory}
           closeAfterTransition
           BackdropComponent={Backdrop}
           BackdropProps={{
             timeout: 500,
           }}
         >
-          <Fade in={open}>
+          <Fade in={openHistory}>
             <Box sx={style}>
               <Table>
                 <TableBody>
@@ -260,6 +386,39 @@ function HomePage() {
                   ))}
                 </TableBody>
               </Table>
+            </Box>
+          </Fade>
+        </Modal>
+      </div>
+      <div>
+        <Modal
+          aria-labelledby="transition-modal-title"
+          aria-describedby="transition-modal-description"
+          open={openBalance}
+          onClose={handleCloseBalance}
+          closeAfterTransition
+          BackdropComponent={Backdrop}
+          BackdropProps={{
+            timeout: 500,
+          }}
+        >
+          <Fade in={openBalance}>
+            <Box sx={style2}>
+              <p className="text-black mb-4">
+                Current Balance: <strong>IDR {balance}</strong>
+              </p>
+              <TextField
+                label="Top-up Amount"
+                variant="outlined"
+                inputMode="decimal"
+                value={topUpAmount}
+                onChange={(e) => setTopUpAmount(parseInt(e.target.value, 10))}
+                fullWidth
+                margin="normal"
+              />
+              <Button variant="contained" color="success" onClick={handleTopUp}>
+                Top Up
+              </Button>
             </Box>
           </Fade>
         </Modal>
