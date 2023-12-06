@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
+	"flag"
 	"log"
 	"net/http"
 	"os"
@@ -20,6 +22,9 @@ import (
 func main() {
 	l := log.New(os.Stdout, "RED-GATE-SERVER-", log.LstdFlags)
 	ctx := context.Background()
+	certFile := flag.String("certfile", "park-ir-be.site+4.pem", "certificate PEM file")
+	keyFile := flag.String("keyfile", "park-ir-be.site+4-key.pem", "key PEM file")
+	flag.Parse()
 
 	env := os.Getenv("APP_ENV")
 	if env == "" {
@@ -44,10 +49,14 @@ func main() {
 		Handler:     defineMultiplexer(l, queries),
 		IdleTimeout: 30 * time.Second,
 		ReadTimeout: time.Second,
+		TLSConfig: &tls.Config{
+			MinVersion:               tls.VersionTLS12,
+			PreferServerCipherSuites: true,
+		},
 	}
 
 	// now the startServer is run by a routine
-	go startServer(server, l)
+	go startServer(server, l, *certFile, *keyFile)
 
 	// inorder to block the routine, we might use a channel (we can use wait group also)
 	shut := make(chan os.Signal, 1)
@@ -61,10 +70,10 @@ func main() {
 	stopServer(server, l, &timeout_ctx, &cancel)
 }
 
-func startServer(s *http.Server, l *log.Logger) {
+func startServer(s *http.Server, l *log.Logger, cert string, key string) {
 	l.Println("🔥 Server is running on", s.Addr)
 
-	err := s.ListenAndServe()
+	err := s.ListenAndServeTLS(cert, key)
 	if err != nil && err != http.ErrServerClosed {
 		l.Fatalln("Server is failed due to", err)
 	}
