@@ -67,7 +67,7 @@ function HomePage() {
   const handleClose = () => setOpen(false);
 
   const instance = axios.create({
-    baseURL: "http://172.173.157.174:4444/", // Replace with your API base UR
+    baseURL: "https://172.173.157.174:4343/", // Replace with your API base UR
   });
 
   useEffect(() => {
