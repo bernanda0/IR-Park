@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from "react";
+import React, {useEffect, useState } from "react";
 import "../../App.css";
 import "../../index.css";
 import axios, { AxiosError, HttpStatusCode } from "axios";
@@ -10,9 +10,8 @@ const LoginForm: React.FC = () => {
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [username, setUsername] = useState("");
-  const [open, setOpen] = React.useState(false);
+  const [_, setOpen] = React.useState(false);
  
-  const handleOpen = () => setOpen(!open);
   const [, setCookie] = useCookies([
     "accessToken",
     "refreshToken",
@@ -22,7 +21,7 @@ const LoginForm: React.FC = () => {
   const [showWarning, setShowWarning] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const instance = axios.create({
-    baseURL: "http://localhost:4444/", // Replace with your API base UR
+    baseURL: "http://172.173.157.174:4444/", // Replace with your API base UR
   });
 
   const [signUpSuccess, setSignUpSuccess] = useState(false);

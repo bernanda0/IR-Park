@@ -2,7 +2,6 @@ import axios, { AxiosError, HttpStatusCode } from "axios";
 import { useState, useEffect } from "react";
 import { useCookies } from "react-cookie";
 import checkAndRenewToken from "../../utils/renewToken";
-import { generateInoContent } from "../../static/inoGenerator";
 import Popup from "../popup";
 import CarPlateComponent from "../../component/CarPlate";
 import DisplayIDComponent from "../../component/DisplayID";
@@ -12,14 +11,12 @@ import DataArrayIcon from "@mui/icons-material/DataArray";
 import {
   Backdrop,
   Box,
-  Button,
   Fade,
   Modal,
   Table,
   TableBody,
   TableCell,
-  TableRow,
-  Typography,
+  TableRow
 } from "@mui/material";
 
 const style = {
@@ -70,7 +67,7 @@ function HomePage() {
   const handleClose = () => setOpen(false);
 
   const instance = axios.create({
-    baseURL: "http://localhost:4444/", // Replace with your API base UR
+    baseURL: "http://172.173.157.174:4444/", // Replace with your API base UR
   });
 
   useEffect(() => {

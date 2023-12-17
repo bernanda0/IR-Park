@@ -1,12 +1,6 @@
 import {
-  BrowserRouter,
-  Navigate,
   Route,
-  Router,
-  RouterProvider,
   Routes,
-  createBrowserRouter,
-  createRoutesFromElements,
 } from "react-router-dom";
 import "./App.css";
 import "./index.css";

@@ -14,7 +14,7 @@ const CarPlateComponent: React.FC<CarPlateComponentProps> = (props) => {
   const { initialPlateNumber, setPlateNumber } = props;
 
 
-  const [state, setState] = useState<CarPlateComponentState>({
+  const [_, setState] = useState<CarPlateComponentState>({
     plateNumber: initialPlateNumber,
   });
 
