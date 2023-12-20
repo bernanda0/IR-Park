@@ -121,7 +121,7 @@ function HomePage() {
     formData.append("plate_number", plateNumber);
 
     instance
-      .post("http://localhost:4444/plate/create", formData, {
+      .post("https://172.173.157.174:4343/plate/create", formData, {
         headers: {
           Authorization: `Bearer ${cookies.accessToken}`,
           "Content-Type": "application/x-www-form-urlencoded",

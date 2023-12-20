@@ -7,7 +7,7 @@ const checkAndRenewToken = async (token: RenewToken, setCookie: (name: "accessTo
     payload.append('refresh_token', refreshToken);
 
     try {
-      const response = await fetch('http://localhost:4444/auth/renewToken', {
+      const response = await fetch('https://172.173.157.174:4343/auth/renewToken', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
